@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEBEL PRO</title>
+<style>
+  :root{--bg:#020617;--card:#0f172a;--field:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--accent:#00b8db;--red:#f87171;--green:#4ade80}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Roboto,Arial,sans-serif;padding:16px}
+  h1{margin:0;color:var(--accent);font-size:28px}
+  .sub{color:var(--muted);font-size:14px;margin:4px 0 14px}
+  nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  nav button{background:var(--field);color:var(--text);border:0;border-radius:10px;padding:12px 14px;font-size:15px}
+  nav button.active{background:var(--accent);color:#00212b}
+  .card{background:var(--card);border-radius:18px;padding:20px;margin-bottom:16px}
+  h2{margin:0 0 14px;font-size:22px}
+  h3{margin:20px 0 10px}
+  label{display:block;color:var(--muted);margin:12px 0 6px;font-size:15px}
+  input,select,textarea{width:100%;background:var(--field);color:var(--text);border:0;border-radius:10px;padding:15px 13px;font-size:16px;font-family:inherit}
+  textarea{min-height:110px}
+  .sum{background:var(--field);border-radius:10px;padding:14px 16px;margin:16px 0;line-height:1.8}
+  .btn{width:100%;background:var(--accent);color:#00212b;border:0;border-radius:12px;padding:16px;font-weight:700;font-size:16px;margin-top:6px}
+  .btn.alt{background:var(--field);color:var(--text)}
+  .item{background:var(--field);border-radius:12px;padding:14px 16px;margin-top:10px;line-height:1.6}
+  .item .name{font-weight:700}
+  .muted{color:var(--muted)}
+  .red{color:var(--red)} .green{color:var(--green)}
+  .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .sm{background:#334155;color:var(--text);border:0;border-radius:8px;padding:8px 12px;font-size:14px}
+  .sm.del{background:#7f1d1d}
+  a.sm{text-decoration:none;display:inline-block}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:var(--field);border-radius:12px;padding:14px}
+  .stat b{display:block;font-size:18px;margin-top:4px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:10px 6px;text-align:right;border-bottom:1px solid #334155}
+  th:first-child,td:first-child{text-align:left}
+  .hidden,#lock.hidden{display:none!important}
+  #lock{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px}
+  #lock .box{width:100%;max-width:360px;text-align:center}
+  #lock input{text-align:center;font-size:24px;letter-spacing:8px;margin:16px 0}
+  @media print{
+    body{background:#fff;color:#000;padding:0}
+    nav,.btn,.sm,.sub,h1,#lock,section:not(#reports){display:none!important}
+    #reports{display:block!important;background:#fff;color:#000;padding:0}
+    th,td{border-bottom:1px solid #999;color:#000}
+    .green,.red,.muted{color:#000}
+  }
+</style>
+</head>
+<body>
+
+<div id="lock" class="hidden">
+  <div class="box">
+    <h1>MEBEL PRO</h1>
+    <div class="sub">PIN kodni kiriting</div>
+    <input id="lock_pin" type="password" inputmode="numeric" maxlength="12" autocomplete="off">
+    <button class="btn" id="lock_btn">Kirish</button>
+    <div id="lock_err" class="red" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<h1>MEBEL PRO</h1>
+<div class="sub">Mebel ishlab chiqarishni boshqarish tizimi</div>
+
+<nav id="nav">
+  <button data-tab="home" class="active">Bosh sahifa</button>
+  <button data-tab="orders">Buyurtmalar</button>
+  <button data-tab="workers">Ishchilar</button>
+  <button data-tab="salary">Ish haqi</button>
+  <button data-tab="expenses">Xarajatlar</button>
+  <button data-tab="stock">Ombor</button>
+  <button data-tab="debts">Qarzlar</button>
+  <button data-tab="reports">Hisobotlar</button>
+  <button data-tab="settings">Sozlamalar</button>
+</nav>
+
+<!-- BOSH SAHIFA -->
+<section id="home" class="card">
+  <h2>Umumiy ko‘rsatkichlar</h2>
+  <div id="home_alerts"></div>
+  <div class="grid" id="stats"></div>
+  <h3>Ishchilar statistikasi</h3>
+  <div id="home_workers"></div>
+</section>
+
+<!-- BUYURTMALAR -->
+<section id="orders" class="card hidden">
+  <h2>Yangi buyurtma</h2>
+  <input id="o_name" placeholder="Mijoz ism-familiyasi" style="margin-top:0">
+  <label>Mijoz telefoni</label>
+  <input id="o_phone" type="tel" placeholder="+998">
+  <label>To‘lov muddati (ixtiyoriy)</label>
+  <input id="o_due" type="date">
+  <label>Buyurtma sanasi</label>
+  <input id="o_date" type="date">
+  <label>Maydon (m²)</label>
+  <input id="o_area" type="number" inputmode="decimal" value="0">
+  <label>1 m² narxi (so‘m)</label>
+  <input id="o_price" type="number" inputmode="numeric" value="50000">
+  <label>To‘langan pul (so‘m)</label>
+  <input id="o_paid" type="number" inputmode="numeric" value="0">
+
+  <h3 style="margin-top:22px">Ishchilar va ish haqi</h3>
+  <label style="margin-top:0">Kim ishladi? Ismni belgilang, o‘ng tomonga ulushini yozing (soat yoki foiz; hammasi 1 bo‘lsa — teng bo‘linadi)</label>
+  <div id="o_workers"></div>
+  <label>Laminat hajmi (m³)</label>
+  <input id="o_m3" type="number" inputmode="decimal" step="0.001" value="0">
+  <label>1 m³ uchun ishchi haqi (so‘m)</label>
+  <input id="o_rate" type="number" inputmode="numeric" value="0">
+  <div class="sum" id="o_sum"></div>
+  <div class="sum">
+    Umumiy summa: <b id="o_total">0 so‘m</b><br>
+    Qolgan pul: <b id="o_rest">0 so‘m</b>
+  </div>
+  <button class="btn" id="o_save">Buyurtmani saqlash</button>
+  <h3>Buyurtmalar ro‘yxati</h3>
+  <div id="o_list"></div>
+</section>
+
+<!-- ISHCHILAR -->
+<section id="workers" class="card hidden">
+  <h2>Yangi ishchi</h2>
+  <input id="w_name" placeholder="Ism-familiyasi" style="margin-top:0">
+  <label>Lavozimi</label>
+  <input id="w_role" placeholder="Masalan: Duradgor">
+  <label>Telefon</label>
+  <input id="w_phone" type="tel" placeholder="+998">
+  <label>Ulush koeffitsienti (1 = oddiy, 1.5 = ko‘proq, 0.7 = kamroq oladi)</label>
+  <input id="w_coef" type="number" inputmode="decimal" step="0.1" value="1">
+  <button class="btn" id="w_save" style="margin-top:16px">Ishchini saqlash</button>
+
+  <h3>Ishchi ishlagan pulni hisoblash</h3>
+  <label style="margin-top:0">Kim ishladi? Ismni belgilang, o‘ng tomonga ulushini yozing (soat yoki foiz; hammasi 1 bo‘lsa — teng bo‘linadi)</label>
+  <div id="g_workers"></div>
+  <label>Buyurtma (ixtiyoriy)</label>
+  <select id="g_order"></select>
+  <label>Sana</label>
+  <input id="g_date" type="date">
+  <label>Izoh</label>
+  <input id="g_note" placeholder="Masalan: shkaf ishi">
+  <label>Laminat hajmi (m³)</label>
+  <input id="g_m3" type="number" inputmode="decimal" step="0.001" value="0">
+  <label>1 m³ uchun haq (so‘m)</label>
+  <input id="g_rate" type="number" inputmode="numeric" value="0">
+  <div class="sum" id="g_sum"></div>
+  <button class="btn" id="g_save">Avtomatik hisoblab qo‘shish</button>
+
+  <h3>Ishchilar ro‘yxati</h3>
+  <div id="w_list"></div>
+</section>
+
+<!-- ISH HAQI -->
+<section id="salary" class="card hidden">
+  <h2>Ish haqi to‘lash</h2>
+  <label style="margin-top:0">Ishchi</label>
+  <select id="s_worker"></select>
+  <label>Sana</label>
+  <input id="s_date" type="date">
+  <label>Summa (so‘m)</label>
+  <input id="s_amount" type="number" inputmode="numeric" value="0">
+  <label>Izoh</label>
+  <input id="s_note" placeholder="Ixtiyoriy">
+  <button class="btn" id="s_save" style="margin-top:16px">To‘lovni saqlash</button>
+  <h3>To‘lovlar tarixi</h3>
+  <div id="s_list"></div>
+</section>
+
+<!-- XARAJATLAR -->
+<section id="expenses" class="card hidden">
+  <h2>Yangi xarajat</h2>
+  <input id="e_name" placeholder="Xarajat nomi (taxta, elim, svet...)" style="margin-top:0">
+  <label>Buyurtma (ixtiyoriy)</label>
+  <select id="e_order"></select>
+  <label>Sana</label>
+  <input id="e_date" type="date">
+  <label>Summa (so‘m)</label>
+  <input id="e_amount" type="number" inputmode="numeric" value="0">
+  <button class="btn" id="e_save" style="margin-top:16px">Xarajatni saqlash</button>
+  <h3>Xarajatlar ro‘yxati</h3>
+  <div id="e_list"></div>
+</section>
+
+<!-- HISOBOTLAR -->
+<section id="reports" class="card hidden">
+  <h2>MEBEL PRO — hisobot</h2>
+  <div class="muted" id="r_date" style="margin-bottom:10px"></div>
+  <h3 style="margin-top:6px">Buyurtmalar bo‘yicha foyda</h3>
+  <div style="overflow-x:auto"><table id="r_orders"></table></div>
+  <h3>Oylik hisobot</h3>
+  <div style="overflow-x:auto"><table id="r_table"></table></div>
+  <p class="muted" style="font-size:13px">Kirim = mijozlardan to‘langan pul. Chiqim = xarajatlar + berilgan ish haqi. Buyurtma foydasi = buyurtma summasi − unga bog‘langan ish haqi va xarajatlar.</p>
+  <button class="btn" id="r_pdf">PDF (chop etish / saqlash)</button>
+  <button class="btn alt" id="r_csv">Excel uchun yuklab olish (CSV)</button>
+</section>
+
+<!-- OMBOR -->
+<section id="stock" class="card hidden">
+  <h2>Ombor (materiallar)</h2>
+  <input id="m_name" placeholder="Material nomi (LDSP, kromka, elim...)" style="margin-top:0">
+  <label>Birligi</label>
+  <input id="m_unit" placeholder="dona, list, m², kg">
+  <label>Boshlang‘ich miqdor</label>
+  <input id="m_qty" type="number" inputmode="decimal" value="0">
+  <label>Minimal qoldiq (kamayganda ogohlantiradi)</label>
+  <input id="m_min" type="number" inputmode="decimal" value="0">
+  <button class="btn" id="m_save" style="margin-top:16px">Materialni qo‘shish</button>
+  <h3>Qoldiqlar</h3>
+  <div id="m_list"></div>
+  <h3>So‘nggi harakatlar</h3>
+  <div id="m_log"></div>
+</section>
+
+<!-- QARZLAR -->
+<section id="debts" class="card hidden">
+  <h2>Qarzdor mijozlar</h2>
+  <div class="sum" id="d_total"></div>
+  <div id="d_list"></div>
+</section>
+
+<!-- SOZLAMALAR -->
+<section id="settings" class="card hidden">
+  <h2>Sozlamalar</h2>
+
+  <h3 style="margin-top:0">PIN kod</h3>
+  <div class="muted" id="pin_state"></div>
+  <input id="pin_new" type="password" inputmode="numeric" maxlength="12" placeholder="Yangi PIN (kamida 4 raqam)" style="margin-top:10px">
+  <button class="btn" id="pin_set">PIN o‘rnatish</button>
+  <button class="btn alt" id="pin_off">PIN ni o‘chirish</button>
+
+  <h3>Umumiy baza (bir nechta telefon)</h3>
+  <div class="muted" style="font-size:14px;line-height:1.5">
+    Firebase → Project settings → Your apps (Web) dagi <b>firebaseConfig</b> ni shu yerga tashlang. Firestore Database yoqilgan bo‘lishi kerak.
+  </div>
+  <textarea id="fb_cfg" placeholder='apiKey: "...", authDomain: "...", projectId: "...", appId: "..."' style="margin-top:10px"></textarea>
+  <button class="btn" id="fb_on">Ulash</button>
+  <button class="btn alt" id="fb_off">Uzish</button>
+  <div class="sum" id="fb_status">Ulanmagan</div>
+
+  <h3>Zaxira nusxa</h3>
+  <button class="btn alt" id="bk_export">Zaxirani yuklab olish (JSON)</button>
+  <label>Zaxiradan tiklash</label>
+  <input id="bk_import" type="file" accept="application/json">
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+const KEY = 'mebelpro_v1', PIN_KEY = 'mebelpro_pin', FB_KEY = 'mebelpro_fb';
+const TABS = ['home','orders','workers','salary','expenses','stock','debts','reports','settings'];
+
+const normalize = d => {
+  d = d || {};
+  ['orders','workers','salaries','expenses','earnings','materials','stockLog'].forEach(k => d[k] = Array.isArray(d[k]) ? d[k] : []);
+  d.updated = d.updated || 0;
+  return d;
+};
+let db = normalize(JSON.parse(localStorage.getItem(KEY) || 'null'));
+let cloud = {ref: null};
+
+function save(){
+  db.updated = Date.now();
+  localStorage.setItem(KEY, JSON.stringify(db));
+  pushCloud();
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const today = () => new Date().toISOString().slice(0,10);
+const fmt = n => Math.round(n || 0).toLocaleString('ru-RU') + " so‘m";
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sum = (arr, k) => arr.reduce((a, x) => a + (+x[k] || 0), 0);
+const wName = id => (db.workers.find(w => w.id === id) || {name:'(o‘chirilgan)'}).name;
+const oName = id => { const o = db.orders.find(x => x.id === id); return o ? o.name : ''; };
+
+['o_date','s_date','e_date','g_date'].forEach(i => $(i).value = today());
+
+/* ---------- PIN ---------- */
+async function hash(s){
+  if (window.crypto && crypto.subtle) {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('mebelpro:' + s));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join('');
+  }
+  let h = 5381; for (const c of 'mebelpro:' + s) h = ((h << 5) + h + c.charCodeAt(0)) | 0;
+  return 'f' + h;
+}
+function pinState(){
+  $('pin_state').textContent = localStorage.getItem(PIN_KEY) ? 'PIN yoqilgan ✓' : 'PIN o‘rnatilmagan';
+}
+async function tryUnlock(){
+  const ok = (await hash($('lock_pin').value)) === localStorage.getItem(PIN_KEY);
+  if (ok) { $('lock').classList.add('hidden'); $('lock_pin').value = ''; $('lock_err').textContent = ''; }
+  else $('lock_err').textContent = 'PIN noto‘g‘ri';
+}
+$('lock_btn').onclick = tryUnlock;
+$('lock_pin').addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+$('pin_set').onclick = async () => {
+  const p = $('pin_new').value.trim();
+  if (!/^\d{4,12}$/.test(p)) return alert('PIN kamida 4 ta raqamdan iborat bo‘lsin');
+  localStorage.setItem(PIN_KEY, await hash(p));
+  $('pin_new').value = ''; pinState(); alert('PIN o‘rnatildi');
+};
+$('pin_off').onclick = () => {
+  if (!localStorage.getItem(PIN_KEY)) return;
+  if (confirm('PIN o‘chirilsinmi?')) { localStorage.removeItem(PIN_KEY); pinState(); }
+};
+if (localStorage.getItem(PIN_KEY)) $('lock').classList.remove('hidden');
+
+/* ---------- Umumiy baza (Firebase Firestore) ---------- */
+const setStatus = t => $('fb_status').textContent = t;
+const loadScript = src => new Promise((res, rej) => {
+  const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+});
+function pushCloud(){
+  if (!cloud.ref) return;
+  cloud.ref.set({data: JSON.stringify(db), t: db.updated}).catch(e => setStatus('Xato: ' + e.message));
+}
+async function connectCloud(cfg){
+  setStatus('Ulanmoqda...');
+  if (!window.firebase) {
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js');
+  }
+  if (!firebase.apps.length) firebase.initializeApp(cfg);
+  cloud.ref = firebase.firestore().collection('mebelpro').doc('main');
+  cloud.ref.onSnapshot(snap => {
+    if (snap.metadata.hasPendingWrites) return;
+    if (!snap.exists) { pushCloud(); setStatus('Ulandi (yangi baza yaratildi) ✓'); return; }
+    const d = snap.data(), t = d.t || 0;
+    if (t > (db.updated || 0)) {
+      db = normalize(JSON.parse(d.data)); db.updated = t;
+      localStorage.setItem(KEY, JSON.stringify(db)); render();
+    } else if (t < (db.updated || 0)) pushCloud();
+    setStatus('Ulangan ✓ ' + new Date().toLocaleTimeString());
+  }, err => setStatus('Xato: ' + err.message));
+}
+function parseCfg(txt){
+  const cfg = {};
+  for (const m of txt.matchAll(/(\w+)\s*["']?\s*:\s*["']([^"']+)["']/g)) cfg[m[1]] = m[2];
+  return cfg.apiKey && cfg.projectId ? cfg : null;
+}
+$('fb_on').onclick = async () => {
+  const cfg = parseCfg($('fb_cfg').value);
+  if (!cfg) return alert('firebaseConfig topilmadi (apiKey va projectId kerak)');
+  try { await connectCloud(cfg); localStorage.setItem(FB_KEY, JSON.stringify(cfg)); }
+  catch (e) { setStatus('Xato: ' + e.message); }
+};
+$('fb_off').onclick = () => {
+  localStorage.removeItem(FB_KEY);
+  alert('Uzildi. Sahifani yangilang (ma’lumotlar telefonda qoladi).');
+  location.reload();
+};
+try {
+  const saved = JSON.parse(localStorage.getItem(FB_KEY) || 'null');
+  if (saved) connectCloud(saved).catch(e => setStatus('Xato: ' + e.message));
+} catch (e) {}
+
+/* ---------- Tablar ---------- */
+$('nav').addEventListener('click', e => {
+  const t = e.target.dataset.tab; if (!t) return;
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b === e.target));
+  TABS.forEach(id => $(id).classList.toggle('hidden', id !== t));
+  render();
+});
+
+/* ---------- Buyurtmalar ---------- */
+function calc(){
+  const total = (+$('o_area').value || 0) * (+$('o_price').value || 0);
+  const rest = total - (+$('o_paid').value || 0);
+  $('o_total').textContent = fmt(total);
+  $('o_rest').textContent = fmt(rest);
+}
+['o_area','o_price','o_paid'].forEach(i => $(i).addEventListener('input', calc));
+
+$('o_save').onclick = () => {
+  const name = $('o_name').value.trim();
+  const area = +$('o_area').value, price = +$('o_price').value, paid = +$('o_paid').value || 0;
+  if (!name || !(area > 0)) return alert('Mijoz ismi va maydonni kiriting');
+  const w = oCalc();
+  if (w.n && !(w.sw > 0)) return alert('Ishchi ulushi 0 dan katta bo‘lsin');
+  const id = uid(), date = $('o_date').value || today();
+  const crew = w.items.filter(x => x.w > 0);
+  db.orders.unshift({id, name, phone: $('o_phone').value.trim(), due: $('o_due').value || '', date, area, price, total: area*price, paid, m3: w.m3, rate: w.rate,
+    crew: crew.map(x => ({id: x.id, share: +x.share.toFixed(4)}))});
+  if (w.total > 0) crew.forEach(x => db.earnings.unshift({
+    id: uid(), workerId: x.id, orderId: id, auto: true, date, note: 'Buyurtma: ' + name,
+    m3: +x.m3.toFixed(3), amount: Math.round(x.amount)
+  }));
+  save();
+  $('o_name').value = ''; $('o_phone').value = ''; $('o_due').value = ''; $('o_area').value = 0; $('o_paid').value = 0; $('o_m3').value = 0;
+  document.querySelectorAll('.o_chk').forEach(c => c.checked = false);
+  calc(); render();
+};
+
+/* ---------- Ishchilar ---------- */
+$('w_save').onclick = () => {
+  const name = $('w_name').value.trim();
+  if (!name) return alert('Ishchi ismini kiriting');
+  db.workers.push({id: uid(), name, role: $('w_role').value.trim(), phone: $('w_phone').value.trim(), coef: +$('w_coef').value > 0 ? +$('w_coef').value : 1});
+  save(); ['w_name','w_role','w_phone'].forEach(i => $(i).value = ''); $('w_coef').value = 1; render();
+};
+
+function gCalc(){
+  const m3 = +$('g_m3').value || 0, rate = +$('g_rate').value || 0;
+  const items = [...document.querySelectorAll('.g_chk:checked')].map(c => {
+    const inp = document.querySelector('.g_w[data-id="' + c.value + '"]');
+    return {id: c.value, w: Math.max(0, +(inp && inp.value) || 0)};
+  });
+  const sw = items.reduce((a, x) => a + x.w, 0);
+  const total = m3 * rate;
+  items.forEach(x => { x.share = sw ? x.w / sw : 0; x.m3 = m3 * x.share; x.amount = total * x.share; });
+  $('g_sum').innerHTML = `Umumiy summa: <b>${fmt(total)}</b>` +
+    (items.map(x => `<br>${esc(wName(x.id))}: <b>${fmt(x.amount)}</b> <span class="muted">(${(x.share * 100).toFixed(1)}% · ${x.m3.toFixed(3)} m³)</span>`).join('') ||
+     '<br><span class="muted">Ishchi belgilanmagan</span>');
+  return {m3, rate, items, total, n: items.length, sw};
+}
+['g_m3','g_rate'].forEach(i => $(i).addEventListener('input', gCalc));
+$('g_workers').addEventListener('input', gCalc);
+$('g_workers').addEventListener('change', gCalc);
+
+function oCalc(){
+  const m3 = +$('o_m3').value || 0, rate = +$('o_rate').value || 0;
+  const items = [...document.querySelectorAll('.o_chk:checked')].map(c => {
+    const inp = document.querySelector('.o_w[data-id="' + c.value + '"]');
+    return {id: c.value, w: Math.max(0, +(inp && inp.value) || 0)};
+  });
+  const sw = items.reduce((a, x) => a + x.w, 0);
+  const total = m3 * rate;
+  items.forEach(x => { x.share = sw ? x.w / sw : 0; x.m3 = m3 * x.share; x.amount = total * x.share; });
+  $('o_sum').innerHTML = `Ishchilar soni: <b>${items.filter(x => x.w > 0).length} ta</b><br>Ishchilarga jami: <b>${fmt(total)}</b>` +
+    items.map(x => `<br>${esc(wName(x.id))}: <b>${fmt(x.amount)}</b> <span class="muted">(${(x.share * 100).toFixed(1)}% · ${x.m3.toFixed(3)} m³)</span>`).join('');
+  return {m3, rate, items, total, n: items.length, sw};
+}
+['o_m3','o_rate'].forEach(i => $(i).addEventListener('input', oCalc));
+$('o_workers').addEventListener('input', oCalc);
+$('o_workers').addEventListener('change', oCalc);
+
+$('g_save').onclick = () => {
+  const {items, total, n, sw} = gCalc();
+  if (!n) return alert('Kamida bitta ishchini belgilang');
+  if (!(sw > 0)) return alert('Ulush (soat yoki foiz) 0 dan katta bo‘lsin');
+  if (!(total > 0)) return alert('m³ va narxni kiriting');
+  const date = $('g_date').value || today(), note = $('g_note').value.trim(), orderId = $('g_order').value || null;
+  items.filter(x => x.w > 0).forEach(x => db.earnings.unshift({
+    id: uid(), workerId: x.id, orderId, date, note, m3: +x.m3.toFixed(3), amount: Math.round(x.amount)
+  }));
+  save(); $('g_m3').value = 0; $('g_note').value = ''; render();
+};
+
+/* ---------- Ish haqi ---------- */
+$('s_save').onclick = () => {
+  const amount = +$('s_amount').value;
+  if (!$('s_worker').value) return alert('Avval ishchi qo‘shing');
+  if (!(amount > 0)) return alert('Summani kiriting');
+  db.salaries.unshift({id: uid(), workerId: $('s_worker').value, date: $('s_date').value || today(), amount, note: $('s_note').value.trim()});
+  save(); $('s_amount').value = 0; $('s_note').value = ''; render();
+};
+
+/* ---------- Xarajatlar ---------- */
+$('e_save').onclick = () => {
+  const name = $('e_name').value.trim(), amount = +$('e_amount').value;
+  if (!name || !(amount > 0)) return alert('Nom va summani kiriting');
+  db.expenses.unshift({id: uid(), orderId: $('e_order').value || null, name, date: $('e_date').value || today(), amount});
+  save(); $('e_name').value = ''; $('e_amount').value = 0; render();
+};
+
+/* ---------- O‘chirish / qo‘shimcha to‘lov ---------- */
+window.del = (col, id) => {
+  if (!confirm('O‘chirilsinmi?')) return;
+  db[col] = db[col].filter(x => x.id !== id);
+  if (col === 'materials') db.stockLog = db.stockLog.filter(s => s.materialId !== id);
+  if (col === 'workers') {
+    db.salaries = db.salaries.filter(s => s.workerId !== id);
+    db.earnings = db.earnings.filter(s => s.workerId !== id);
+  }
+  if (col === 'orders') {
+    db.earnings = db.earnings.filter(e => !(e.auto && e.orderId === id));
+    db.earnings.forEach(e => { if (e.orderId === id) e.orderId = null; });
+    db.expenses.forEach(e => { if (e.orderId === id) e.orderId = null; });
+  }
+  save(); render();
+};
+$('m_save').onclick = () => {
+  const name = $('m_name').value.trim();
+  if (!name) return alert('Material nomini kiriting');
+  const qty = +$('m_qty').value || 0, id = uid();
+  db.materials.push({id, name, unit: $('m_unit').value.trim() || 'dona', qty, min: +$('m_min').value || 0});
+  if (qty > 0) db.stockLog.unshift({id: uid(), materialId: id, type: 'in', qty, date: today(), note: 'Boshlang‘ich qoldiq'});
+  save(); ['m_name','m_unit'].forEach(i => $(i).value = ''); $('m_qty').value = 0; $('m_min').value = 0; render();
+};
+window.stockMove = (id, type) => {
+  const m = db.materials.find(x => x.id === id); if (!m) return;
+  const v = parseFloat(String(prompt((type === 'in' ? 'Kirim' : 'Chiqim') + ' miqdori (' + m.unit + '):')).replace(',', '.'));
+  if (!(v > 0)) return;
+  if (type === 'out' && v > m.qty && !confirm('Omborda faqat ' + m.qty + ' ' + m.unit + ' bor. Baribir chiqim qilinsinmi?')) return;
+  const note = type === 'out' ? (prompt('Izoh / qaysi buyurtma uchun (ixtiyoriy):') || '') : '';
+  m.qty = +(m.qty + (type === 'in' ? v : -v)).toFixed(3);
+  db.stockLog.unshift({id: uid(), materialId: id, type, qty: v, date: today(), note});
+  save(); render();
+};
+window.editCoef = id => {
+  const w = db.workers.find(x => x.id === id);
+  const v = parseFloat(String(prompt('Ulush koeffitsienti (1 = oddiy, 1.5 = ko‘proq, 0.7 = kamroq):', w.coef || 1)).replace(',', '.'));
+  if (!(v > 0)) return;
+  w.coef = v; save();
+  document.querySelectorAll('.g_w[data-id="' + id + '"],.o_w[data-id="' + id + '"]').forEach(i => i.value = v);
+  render();
+};
+window.addPay = id => {
+  const o = db.orders.find(x => x.id === id);
+  const v = +prompt('Qancha pul to‘landi? (so‘m)\nQolgan: ' + fmt(o.total - o.paid));
+  if (v > 0) { o.paid += v; save(); render(); }
+};
+
+/* ---------- Hisobot ma’lumotlari ---------- */
+function orderRows(){
+  return db.orders.map(o => {
+    const ws = sum(db.earnings.filter(e => e.orderId === o.id), 'amount');
+    const ex = sum(db.expenses.filter(e => e.orderId === o.id), 'amount');
+    return {name: o.name, date: o.date, total: o.total, paid: o.paid, ws, ex, profit: o.total - ws - ex, id: o.id};
+  });
+}
+function monthRows(){
+  const m = {};
+  const add = (d, k, v) => { const key = (d || '').slice(0,7); if (!key) return; (m[key] ??= {in:0, sal:0, exp:0})[k] += +v || 0; };
+  db.orders.forEach(o => add(o.date, 'in', o.paid));
+  db.salaries.forEach(s => add(s.date, 'sal', s.amount));
+  db.expenses.forEach(x => add(x.date, 'exp', x.amount));
+  return Object.keys(m).sort().reverse().map(k => ({month: k, in: m[k].in, out: m[k].sal + m[k].exp, profit: m[k].in - m[k].sal - m[k].exp}));
+}
+
+$('r_pdf').onclick = () => window.print();
+$('r_csv').onclick = () => {
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const lines = [['BUYURTMALAR'], ['Mijoz','Sana','Summa','Tolangan','Ish haqi','Xarajat','Foyda']];
+  orderRows().forEach(r => lines.push([r.name, r.date, r.total, r.paid, r.ws, r.ex, r.profit]));
+  lines.push([], ['OYLIK HISOBOT'], ['Oy','Kirim','Chiqim','Foyda']);
+  monthRows().forEach(r => lines.push([r.month, r.in, r.out, r.profit]));
+  const csv = '\uFEFF' + lines.map(l => l.map(q).join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
+  a.download = 'mebelpro-hisobot-' + today() + '.csv';
+  a.click();
+};
+
+/* ---------- Zaxira ---------- */
+$('bk_export').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 2)], {type:'application/json'}));
+  a.download = 'mebelpro-zaxira-' + today() + '.json';
+  a.click();
+};
+$('bk_import').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      if (!confirm('Hozirgi ma’lumotlar zaxiradagi bilan almashtiriladi. Davom etasizmi?')) return;
+      db = normalize(JSON.parse(rd.result)); save(); render(); alert('Tiklandi');
+    } catch (err) { alert('Fayl noto‘g‘ri'); }
+  };
+  rd.readAsText(f); e.target.value = '';
+};
+
+/* ---------- Chizish ---------- */
+function orderOptions(){
+  return '<option value="">— Umumiy (buyurtmasiz) —</option>' +
+    db.orders.map(o => `<option value="${o.id}">${esc(o.name)} · ${esc(o.date)}</option>`).join('');
+}
+
+function render(){
+  // Bosh sahifa
+  const income = sum(db.orders,'paid'), debt = sum(db.orders,'total') - income;
+  const sal = sum(db.salaries,'amount'), exp = sum(db.expenses,'amount');
+  const profit = income - sal - exp;
+  $('stats').innerHTML = [
+    ['Buyurtmalar', db.orders.length + ' ta'],
+    ['Ishchilar', db.workers.length + ' ta'],
+    ['Jami laminat', sum(db.orders,'m3').toFixed(2) + ' m³'],
+    ['Umumiy summa', fmt(sum(db.orders,'total'))],
+    ['Kirim (to‘langan)', `<span class="green">${fmt(income)}</span>`],
+    ['Qarzdorlik', `<span class="red">${fmt(debt)}</span>`],
+    ['Ish haqi (berilgan)', fmt(sal)],
+    ['Ishchilarga qarz', `<span class="red">${fmt(sum(db.earnings,'amount') - sal)}</span>`],
+    ['Xarajatlar', fmt(exp)],
+    ['Sof foyda', `<span class="${profit>=0?'green':'red'}">${fmt(profit)}</span>`]
+  ].map(([k,v]) => `<div class="stat"><span class="muted">${k}</span><b>${v}</b></div>`).join('');
+
+  const overdue = db.orders.filter(o => o.total - o.paid > 0 && o.due && o.due < today());
+  const lowM = db.materials.filter(m => m.min > 0 && m.qty <= m.min);
+  $('home_alerts').innerHTML =
+    (overdue.length ? `<div class="item" style="border-left:4px solid var(--red)">⚠ Muddati o‘tgan qarzlar: <b>${overdue.length} ta</b> (${fmt(overdue.reduce((a, o) => a + o.total - o.paid, 0))})</div>` : '') +
+    (lowM.length ? `<div class="item" style="border-left:4px solid var(--red)">⚠ Omborda kam qoldi: ${lowM.map(m => esc(m.name)).join(', ')}</div>` : '');
+
+  $('home_workers').innerHTML = db.workers.map(w => {
+    const es = db.earnings.filter(e => e.workerId === w.id);
+    const cnt = new Set(es.filter(e => e.orderId).map(e => e.orderId)).size;
+    const earned = sum(es, 'amount'), got = sum(db.salaries.filter(s => s.workerId === w.id), 'amount');
+    return `<div class="item"><div class="name">${esc(w.name)}</div>
+      Buyurtmalar: ${cnt} ta · Laminat: ${sum(es, 'm3').toFixed(2)} m³<br>
+      Ishlagan: ${fmt(earned)} · Qolgan haq: <b class="${earned - got > 0 ? 'red' : 'green'}">${fmt(earned - got)}</b></div>`;
+  }).join('') || '<div class="muted">Hali ishchi yo‘q</div>';
+
+  // Buyurtmalar
+  const prof = Object.fromEntries(orderRows().map(r => [r.id, r]));
+  $('o_list').innerHTML = db.orders.map(o => {
+    const r = prof[o.id];
+    return `
+    <div class="item">
+      <div class="name">${esc(o.name)}</div>
+      <div class="muted">${esc(o.date)}</div>
+      Maydon: ${o.area} m²<br>Jami: ${fmt(o.total)}<br>To‘langan: ${fmt(o.paid)}<br>
+      Qolgan: <span class="${o.total-o.paid>0?'red':'green'}">${fmt(o.total - o.paid)}</span><br>
+      <span class="muted">Ish haqi: ${fmt(r.ws)} · Xarajat: ${fmt(r.ex)}</span><br>
+      Foyda: <b class="${r.profit>=0?'green':'red'}">${fmt(r.profit)}</b>
+      ${(o.crew && o.crew.length) ? '<br><span class="muted">Ishchilar (' + o.crew.length + ' ta' + (o.m3 ? ', ' + o.m3 + ' m³' : '') + '): ' +
+        o.crew.map(c => esc(wName(c.id)) + ' ' + Math.round(c.share * 100) + '%').join(', ') + '</span>' : ''}
+      <div class="row">
+        ${o.total - o.paid > 0 ? `<button class="sm" onclick="addPay('${o.id}')">+ To‘lov</button>` : ''}
+        <button class="sm del" onclick="del('orders','${o.id}')">O‘chirish</button>
+      </div>
+    </div>`;
+  }).join('') || '<div class="muted">Hali buyurtma yo‘q</div>';
+
+  // Buyurtma tanlovlari
+  ['g_order','e_order'].forEach(id => { const cur = $(id).value; $(id).innerHTML = orderOptions(); $(id).value = cur; });
+
+  // Ishchilar: belgilash ro‘yxati
+  const checked = new Set([...document.querySelectorAll('.g_chk:checked')].map(c => c.value));
+  const wts = {};
+  document.querySelectorAll('.g_w').forEach(i => wts[i.dataset.id] = i.value);
+  $('g_workers').innerHTML = db.workers.map(w =>
+    `<div style="display:flex;align-items:center;gap:10px;margin:8px 0">
+       <input type="checkbox" class="g_chk" value="${w.id}" style="width:22px;height:22px;flex:none" ${checked.has(w.id) ? 'checked' : ''}>
+       <span style="flex:1">${esc(w.name)}</span>
+       <input type="number" class="g_w" data-id="${w.id}" inputmode="decimal" value="${wts[w.id] ?? (w.coef || 1)}" style="width:90px;padding:10px" title="Ulush">
+     </div>`
+  ).join('') || '<div class="muted">Avval ishchi qo‘shing</div>';
+  gCalc();
+
+  // Buyurtma formasidagi ishchilar
+  const oChecked = new Set([...document.querySelectorAll('.o_chk:checked')].map(c => c.value));
+  const oWts = {};
+  document.querySelectorAll('.o_w').forEach(i => oWts[i.dataset.id] = i.value);
+  $('o_workers').innerHTML = db.workers.map(w =>
+    `<div style="display:flex;align-items:center;gap:10px;margin:8px 0">
+       <input type="checkbox" class="o_chk" value="${w.id}" style="width:22px;height:22px;flex:none" ${oChecked.has(w.id) ? 'checked' : ''}>
+       <span style="flex:1">${esc(w.name)}</span>
+       <input type="number" class="o_w" data-id="${w.id}" inputmode="decimal" value="${oWts[w.id] ?? (w.coef || 1)}" style="width:90px;padding:10px" title="Ulush">
+     </div>`
+  ).join('') || '<div class="muted">Avval «Ishchilar» bo‘limida ishchi qo‘shing</div>';
+  oCalc();
+
+  // Ishchilar ro‘yxati
+  $('w_list').innerHTML = db.workers.map(w => {
+    const earned = sum(db.earnings.filter(s => s.workerId === w.id), 'amount');
+    const got = sum(db.salaries.filter(s => s.workerId === w.id), 'amount');
+    const left = earned - got;
+    const works = db.earnings.filter(s => s.workerId === w.id).slice(0, 5).map(e =>
+      `<div class="muted" style="font-size:13px">• ${esc(e.date)} ${esc(e.note)} ${e.m3 ? '(' + e.m3 + ' m³)' : ''} ${e.orderId && oName(e.orderId) ? '· ' + esc(oName(e.orderId)) : ''} — ${fmt(e.amount)}
+       <a href="#" onclick="del('earnings','${e.id}');return false" class="red">[x]</a></div>`).join('');
+    return `<div class="item"><div class="name">${esc(w.name)}</div>
+      <div class="muted">${esc(w.role)} ${esc(w.phone)} · Ulush: ×${w.coef || 1}</div>
+      Ishlagan puli: <b>${fmt(earned)}</b><br>
+      Olgan puli: ${fmt(got)}<br>
+      Qolgan haq: <b class="${left>0?'red':'green'}">${fmt(left)}</b>
+      ${works}
+      <div class="row"><button class="sm" onclick="editCoef('${w.id}')">Ulushni o‘zgartirish</button>
+        <button class="sm del" onclick="del('workers','${w.id}')">O‘chirish</button></div></div>`;
+  }).join('') || '<div class="muted">Hali ishchi yo‘q</div>';
+
+  // Ish haqi
+  const cur = $('s_worker').value;
+  $('s_worker').innerHTML = db.workers.map(w => `<option value="${w.id}">${esc(w.name)}</option>`).join('');
+  if (cur) $('s_worker').value = cur;
+  $('s_list').innerHTML = db.salaries.map(s => `
+    <div class="item"><div class="name">${esc(wName(s.workerId))}</div>
+      <div class="muted">${esc(s.date)} ${esc(s.note)}</div>${fmt(s.amount)}
+      <div class="row"><button class="sm del" onclick="del('salaries','${s.id}')">O‘chirish</button></div></div>`
+  ).join('') || '<div class="muted">Hali to‘lov yo‘q</div>';
+
+  // Xarajatlar
+  $('e_list').innerHTML = db.expenses.map(x => `
+    <div class="item"><div class="name">${esc(x.name)}</div>
+      <div class="muted">${esc(x.date)} ${x.orderId && oName(x.orderId) ? '· ' + esc(oName(x.orderId)) : ''}</div>${fmt(x.amount)}
+      <div class="row"><button class="sm del" onclick="del('expenses','${x.id}')">O‘chirish</button></div></div>`
+  ).join('') || '<div class="muted">Hali xarajat yo‘q</div>';
+
+  // Hisobotlar
+  $('r_date').textContent = new Date().toLocaleDateString('ru-RU');
+  $('r_orders').innerHTML = '<tr><th>Mijoz</th><th>Summa</th><th>Ish haqi</th><th>Xarajat</th><th>Foyda</th></tr>' +
+    (orderRows().map(r => `<tr><td>${esc(r.name)}</td><td>${fmt(r.total)}</td><td>${fmt(r.ws)}</td><td>${fmt(r.ex)}</td>
+      <td class="${r.profit>=0?'green':'red'}">${fmt(r.profit)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Ma’lumot yo‘q</td></tr>');
+  $('r_table').innerHTML = '<tr><th>Oy</th><th>Kirim</th><th>Chiqim</th><th>Foyda</th></tr>' +
+    (monthRows().map(r => `<tr><td>${r.month}</td><td>${fmt(r.in)}</td><td>${fmt(r.out)}</td>
+      <td class="${r.profit>=0?'green':'red'}">${fmt(r.profit)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">Ma’lumot yo‘q</td></tr>');
+
+  // Ombor
+  $('m_list').innerHTML = db.materials.map(m => {
+    const low = m.min > 0 && m.qty <= m.min;
+    return `<div class="item"><div class="name">${esc(m.name)}</div>
+      Qoldiq: <b class="${low ? 'red' : 'green'}">${m.qty} ${esc(m.unit)}</b>${low ? ' <span class="red">⚠ kam qoldi</span>' : ''}
+      ${m.min ? `<span class="muted">(minimum: ${m.min})</span>` : ''}
+      <div class="row"><button class="sm" onclick="stockMove('${m.id}','in')">+ Kirim</button>
+        <button class="sm" onclick="stockMove('${m.id}','out')">− Chiqim</button>
+        <button class="sm del" onclick="del('materials','${m.id}')">O‘chirish</button></div></div>`;
+  }).join('') || '<div class="muted">Hali material yo‘q</div>';
+  $('m_log').innerHTML = db.stockLog.slice(0, 15).map(s => {
+    const m = db.materials.find(x => x.id === s.materialId);
+    return `<div class="muted" style="font-size:14px;margin-top:6px">${esc(s.date)} · ${m ? esc(m.name) : '?'}:
+      <b class="${s.type === 'in' ? 'green' : 'red'}">${s.type === 'in' ? '+' : '−'}${s.qty} ${m ? esc(m.unit) : ''}</b> ${esc(s.note)}</div>`;
+  }).join('') || '<div class="muted">Harakat yo‘q</div>';
+
+  // Qarzlar
+  const dl = db.orders.filter(o => o.total - o.paid > 0).sort((a, b) => (a.due || a.date).localeCompare(b.due || b.date));
+  $('d_total').innerHTML = `Qarzdorlar: <b>${dl.length} ta</b><br>Jami qarz: <b class="red">${fmt(dl.reduce((a, o) => a + o.total - o.paid, 0))}</b>`;
+  $('d_list').innerHTML = dl.map(o => {
+    const rest = o.total - o.paid;
+    const late = o.due && o.due < today() ? Math.floor((Date.now() - new Date(o.due)) / 864e5) : 0;
+    const msg = `Hurmatli ${o.name}, MEBEL PRO buyurtmangiz bo‘yicha ${fmt(rest)} qarzingiz qoldi. Iltimos, to‘lovni amalga oshiring.`;
+    return `<div class="item" ${late ? 'style="border-left:4px solid var(--red)"' : ''}>
+      <div class="name">${esc(o.name)}</div>
+      <div class="muted">Buyurtma: ${esc(o.date)}${o.due ? ' · Muddat: ' + esc(o.due) : ''} ${o.phone ? '· ' + esc(o.phone) : ''}</div>
+      Qarz: <b class="red">${fmt(rest)}</b>${late ? ` <span class="red">(${late} kun kechikdi)</span>` : ''}
+      <div class="row">
+        <button class="sm" onclick="addPay('${o.id}')">+ To‘lov</button>
+        ${o.phone ? `<a class="sm" href="tel:${esc(o.phone)}">Qo‘ng‘iroq</a>
+        <a class="sm" href="sms:${esc(o.phone)}?body=${esc(encodeURIComponent(msg))}">SMS eslatma</a>` : ''}
+      </div></div>`;
+  }).join('') || '<div class="muted">Qarzdor yo‘q 🎉</div>';
+
+  pinState();
+}
+calc(); render();
+</script>
+</body>
+</html>
